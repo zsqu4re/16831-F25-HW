@@ -54,7 +54,7 @@ python rob831/scripts/run_hw1.py \
 	--expert_policy_file rob831/policies/experts/Ant.pkl \
 	--env_name Ant-v2 --exp_name bc_ant --n_iter 1 \
 	--expert_data rob831/expert_data/expert_data_Ant-v2.pkl \
-	--video_log_freq -1
+	--learning_rate 4e-3 --n_layers 5 --video_log_freq -1 
 ```
 
 Make sure to follow the homework PDF for more details on what else you need to run.
@@ -67,9 +67,9 @@ General command for section 2:
 ```
 python rob831/scripts/run_hw1.py \
     --expert_policy_file rob831/policies/experts/Ant.pkl \
-    --env_name Ant-v2 --exp_name dagger_ant --n_iter 10 \
+    --env_name Ant-v2 --exp_name dagger_ant --n_iter 8 \
     --do_dagger --expert_data rob831/expert_data/expert_data_Ant-v2.pkl \
-	--video_log_freq -1
+	--n_layers 3 --video_log_freq -1
 ```
 
 Make sure to also try another environment.
