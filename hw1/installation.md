@@ -16,7 +16,7 @@ A. (Recommended) Install with conda:
 	conda create -n rob831 python=3.10
 	```
 
-	3. activate the environment (do this every time you open a new terminal and want to run code):
+	3. Activate the environment (do this every time you open a new terminal and want to run code):
 	```
 	source activate rob831
 	```
@@ -31,6 +31,7 @@ A. (Recommended) Install with conda:
 	cd <path_to_hw1>
 	$ pip install -e .
 	```
+Note: if you run into a `DependencyNotInstalled` error with GLIBC, run `conda install -c conda-forge libstdcxx-ng>=14 libgcc-ng>=14 -y` after creating the conda env and before installing the packages (between step 3 and 4).
 
 This conda environment requires activating it every time you open a new terminal (in order to run code), but the benefit is that the required dependencies for this codebase will not affect existing/other versions of things on your computer. This stand-alone environment will have everything that is necessary.
 
