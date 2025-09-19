@@ -8,9 +8,9 @@ You can run this code on your own machine or on Google Colab.
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LeCAR-Lab/16831-S25-HW/blob/main/hw2/rob831/scripts/run_hw2.ipynb)
 
 Local Install: Might need to install the swig tool
-'''
+```bash
 sudo apt-get install -y swig g++ python3-dev
-'''
+```
 
 ## Complete the code
 
