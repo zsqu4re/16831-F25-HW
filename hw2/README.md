@@ -9,6 +9,7 @@ You can run this code on your own machine or on Google Colab.
 
 Local Install: Might need to install the swig tool
 ```bash
+sudo apt-get update
 sudo apt-get install -y swig g++ python3-dev
 ```
 
