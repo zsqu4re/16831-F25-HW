@@ -11,6 +11,8 @@ Local Install: Might need to install the swig tool
 ```bash
 sudo apt-get update
 sudo apt-get install -y swig g++ python3-dev
+
+pip install -r requirements.txt
 ```
 
 ## Complete the code
