@@ -155,19 +155,26 @@ class RL_Trainer(object):
 
     def collect_training_trajectories(self, itr, load_initial_expertdata, collect_policy, batch_size):
         # TODO: get this from hw1
-        if itr == 0 and load_initial_expertdata is not None:
-            with open(load_initial_expertdata, 'rb') as f:
-                loaded_paths = pickle.load(f)
-            return loaded_paths, 0, None
+        if itr == 0:
+            if load_initial_expertdata:
+                paths = pickle.load(open(self.params['expert_data'], 'rb'))
+                return paths, 0, None
+            else:
+                num_transitions_to_sample = self.params['batch_size_initial']
+        else:
+            num_transitions_to_sample = self.params['batch_size']
+
         print("\nCollecting data to be used for training...")
-        paths,envsteps_this_bath = utils.sample_trajectories(self.env, collect_policy, batch_size, self.params['ep_len']) 
+        paths, envsteps_this_batch = utils.sample_trajectories(
+            self.env, collect_policy, num_transitions_to_sample, self.params['ep_len'])
+
         train_video_paths = None
         if self.log_video:
             print('\nCollecting train rollouts to be used for saving videos...')
-            train_video_paths = utils.sample_n_trajectories(self.env, collect_policy, MAX_NVIDEO, self.MAX_VIDEO_LEN, True)
+            train_video_paths = utils.sample_n_trajectories(self.env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
 
-        return paths, envsteps_this_bath ,train_video_paths
-        
+        return paths, envsteps_this_batch, train_video_paths
+            
     def train_agent(self):
         # TODO: get this from hw1
         print('\nTraining agent using sampled data from replay buffer...')

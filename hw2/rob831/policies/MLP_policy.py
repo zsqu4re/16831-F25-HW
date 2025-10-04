@@ -92,11 +92,14 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs
         else:
             observation = obs[None]
-        obs_t = ptu.from_numpy(observation)
-        act_t = self.forward(obs_t)
-        return ptu.to_numpy(act_t)
+
+        observation = ptu.from_numpy(observation)
+        action_distribution = self(observation)
+        action = action_distribution.sample()  # don't bother with rsample
+        return ptu.to_numpy(action)
 
     # update/train this policy
+
     def update(self, observations, actions, **kwargs):
         # this raise should be left alone as it is a base class for PG
         raise NotImplementedError
@@ -108,15 +111,29 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor):
         # TODO: get this from hw1
+        # if self.discrete:
+        #     logits = self.logits_na(observation)
+        #     action_distribution = distributions.Categorical(logits=logits)
+        # else:
+        #     mean = self.mean_net(observation)
+        #     std = torch.exp(self.logstd)
+        #     action_distribution = distributions.Normal(mean, std)
+        # action = action_distribution
         if self.discrete:
             logits = self.logits_na(observation)
             action_distribution = distributions.Categorical(logits=logits)
+            return action_distribution
         else:
-            mean = self.mean_net(observation)
-            std = torch.exp(self.logstd)
-            action_distribution = distributions.Normal(mean, std)
-        action = action_distribution
-        return mean
+            batch_mean = self.mean_net(observation)
+            scale_tril = torch.diag(torch.exp(self.logstd))
+            batch_dim = batch_mean.shape[0]
+            batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
+            action_distribution = distributions.MultivariateNormal(
+                batch_mean,
+                scale_tril=batch_scale_tril,
+            )
+            return action_distribution
+    
 
 #####################################################
 #####################################################
@@ -141,8 +158,20 @@ class MLPPolicyPG(MLPPolicy):
         # HINT3: don't forget that `optimizer.step()` MINIMIZES a loss
         # HINT4: use self.optimizer to optimize the loss. Remember to
             # 'zero_grad' first
+        dist = self.forward(observations)                     # torch.distributions.Distribution
+        log_prob = dist.log_prob(actions)
 
-        raise NotImplementedError
+        # if log_prob.dim() > 1:
+        #     log_prob = log_prob.sum(dim=-1)
+
+        # # Ensure advantages and log_prob have the same shape
+        # if log_prob.shape != advantages.shape:
+        #     advantages = advantages.expand_as(log_prob)
+
+        policy_loss = -torch.mean(log_prob * advantages)
+        self.optimizer.zero_grad()
+        policy_loss.backward()
+        self.optimizer.step()
 
         if self.nn_baseline:
             ## TODO: update the neural network baseline using the q_values as
@@ -153,7 +182,13 @@ class MLPPolicyPG(MLPPolicy):
                 ## updating the baseline. Remember to 'zero_grad' first
             ## HINT2: You will need to convert the targets into a tensor using
                 ## ptu.from_numpy before using it in the loss
-            raise NotImplementedError
+            q_values_normalized = normalize(q_values, np.mean(q_values), np.std(q_values))
+            targets = ptu.from_numpy(q_values_normalized)
+            baseline_predictions = self.baseline(observations).squeeze()
+            baseline_loss = self.baseline_loss(baseline_predictions, targets)
+            self.baseline_optimizer.zero_grad()
+            baseline_loss.backward()
+            self.baseline_optimizer.step()
 
         train_log = {
             'Training Loss': ptu.to_numpy(policy_loss),
